@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor &mdash; StayRewards</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2712%27%20fill%3D%27%23e65100%27%2F%3E%3Ctext%20x%3D%2732%27%20y%3D%2744%27%20font-family%3D%27Georgia%2Cserif%27%20font-size%3D%2734%27%20font-weight%3D%27700%27%20fill%3D%27%23ffb300%27%20text-anchor%3D%27middle%27%3ES%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js" crossorigin></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--l:#e2e5ea;--m:#687084;--ink:#10131a;--brand:#e65100;--acc:#ffb300}
+  body{font-family:Inter,system-ui,sans-serif;background:#f4f6f8;color:var(--ink);line-height:1.55}
+  .bar{position:sticky;top:0;z-index:50;background:var(--brand);color:#fff;padding:14px 22px;
+       display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .bar h1{font-size:1.02rem;font-weight:700;letter-spacing:.01em}
+  .bar .sp{flex:1}
+  .bar a,.bar button{font:inherit;font-size:.82rem;font-weight:700;padding:9px 16px;border-radius:8px;
+       border:none;cursor:pointer;text-decoration:none;transition:transform .2s,filter .2s}
+  .bar a:hover,.bar button:hover{transform:translateY(-1px);filter:brightness(1.08)}
+  .save{background:var(--acc);color:var(--brand)}
+  .ghost{background:rgba(255,255,255,.14);color:#fff}
+  .shell{max-width:1060px;margin:0 auto;padding:26px 20px 90px}
+  .hint{background:#fff;border:1px solid var(--l);border-left:4px solid var(--acc);
+        border-radius:10px;padding:16px 20px;margin-bottom:22px;font-size:.9rem;color:#39414f}
+  .hint b{color:var(--ink)}
+  .hint ol{margin:8px 0 0 18px}
+  .hint li{margin-bottom:3px}
+  details.card{background:#fff;border:1px solid var(--l);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  details.card>summary{padding:16px 20px;font-weight:700;cursor:pointer;list-style:none;
+       display:flex;align-items:center;gap:10px;user-select:none}
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary::before{content:'▸';color:var(--acc);font-size:.9rem;transition:transform .25s}
+  details.card[open]>summary::before{transform:rotate(90deg)}
+  details.card>summary span.n{margin-left:auto;font-weight:500;font-size:.78rem;color:var(--m)}
+  .pad{padding:4px 20px 20px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:14px}
+  label.f{display:block}
+  label.f>span{display:block;font-size:.68rem;font-weight:700;letter-spacing:.1em;
+       text-transform:uppercase;color:var(--m);margin-bottom:5px}
+  input,textarea,select{width:100%;padding:10px 12px;border:1px solid var(--l);border-radius:8px;
+       font:inherit;font-size:.9rem;background:#fff;outline:none}
+  input:focus,textarea:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,0,0,.05)}
+  textarea{resize:vertical;min-height:72px}
+  input[type=color]{height:42px;padding:3px;cursor:pointer}
+  .item{border:1px solid var(--l);border-radius:10px;padding:16px;margin-bottom:12px;background:#fafbfc}
+  .item-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .item-top b{font-size:.9rem}
+  .item-top .sp{flex:1}
+  .mini{font-size:.74rem;font-weight:700;padding:6px 12px;border-radius:7px;border:1px solid var(--l);
+        background:#fff;cursor:pointer}
+  .mini.del{color:#c92a2a;border-color:#ffc9c9}
+  .mini.del:hover{background:#fff5f5}
+  .add{width:100%;padding:11px;border:1.5px dashed var(--l);border-radius:9px;background:#fff;
+       font:inherit;font-size:.84rem;font-weight:700;color:var(--m);cursor:pointer}
+  .add:hover{border-color:var(--acc);color:var(--acc)}
+  .thumb{display:flex;gap:12px;align-items:flex-start}
+  .thumb img{width:112px;height:80px;object-fit:cover;border-radius:7px;border:1px solid var(--l);
+       background:#eceff3;flex-shrink:0}
+  .thumb .grow{flex:1;min-width:0}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .sw{width:34px;height:34px;border-radius:7px;border:1px solid rgba(0,0,0,.12)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--brand);
+       color:#fff;padding:13px 24px;border-radius:9px;font-weight:600;font-size:.88rem;z-index:99;
+       box-shadow:0 10px 34px rgba(0,0,0,.26)}
+  @media(max-width:620px){.bar h1{width:100%}.thumb{flex-direction:column}.thumb img{width:100%;height:150px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useCallback } = React;
+
+function Field({ label, value, onChange, type = 'text', area, options }) {
+  const common = { value: value ?? '', onChange: e => onChange(e.target.value) };
+  return (
+    <label className="f">
+      <span>{label}</span>
+      {options ? <select {...common}>{options.map(o => <option key={o} value={o}>{o}</option>)}</select>
+        : area ? <textarea rows={area} {...common} />
+        : <input type={type} {...common} />}
+    </label>
+  );
+}
+
+function ImageField({ label, value, onChange }) {
+  return (
+    <div className="thumb">
+      <img src={value} alt="" onError={e => { e.target.style.visibility = 'hidden'; }}
+        onLoad={e => { e.target.style.visibility = 'visible'; }} />
+      <div className="grow">
+        <Field label={label} value={value} onChange={onChange} />
+        <p style={{ fontSize: '.72rem', color: 'var(--m)', marginTop: 5 }}>
+          Paste a web link, or drop your own file in this site's <b>images/</b> folder
+          and write <code>images/your-photo.jpg</code>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function List({ title, items, onChange, blank, render, nameKey }) {
+  const up = (i, patch) => onChange(items.map((it, k) => k === i ? { ...it, ...patch } : it));
+  const del = i => onChange(items.filter((_, k) => k !== i));
+  const move = (i, d) => {
+    const n = items.slice(); const j = i + d;
+    if (j < 0 || j >= n.length) return;
+    [n[i], n[j]] = [n[j], n[i]];
+    onChange(n);
+  };
+  return (
+    <details className="card">
+      <summary>{title}<span className="n">{items.length} item{items.length === 1 ? '' : 's'}</span></summary>
+      <div className="pad">
+        {items.map((it, i) => (
+          <div className="item" key={i}>
+            <div className="item-top">
+              <b>{it[nameKey] || `Item ${i + 1}`}</b>
+              <span className="sp" />
+              <button className="mini" onClick={() => move(i, -1)} disabled={i === 0}>↑</button>
+              <button className="mini" onClick={() => move(i, 1)} disabled={i === items.length - 1}>↓</button>
+              <button className="mini del" onClick={() => del(i)}>Delete</button>
+            </div>
+            {render(it, patch => up(i, patch))}
+          </div>
+        ))}
+        <button className="add" onClick={() => onChange([...items, { ...blank }])}>+ Add new</button>
+      </div>
+    </details>
+  );
+}
+
+function App() {
+  const [c, setC] = useState(() => JSON.parse(JSON.stringify(window.SITE_CONFIG)));
+  const [msg, setMsg] = useState('');
+  const patch = useCallback((section, data) => setC(p => ({ ...p, [section]: { ...p[section], ...data } })), []);
+  const put = useCallback((key, val) => setC(p => ({ ...p, [key]: val })), []);
+  const flash = t => { setMsg(t); setTimeout(() => setMsg(''), 2600); };
+
+  const fileText = () => {
+    return '/* ============================================================\n'
+      + '   ' + c.brand.name + ' — site content\n'
+      + '   Edited with admin.html. Safe to hand-edit as well.\n'
+      + '   ============================================================ */\n\n'
+      + 'window.SITE_CONFIG = ' + JSON.stringify(c, null, 2) + ';\n';
+  };
+
+  const download = () => {
+    const blob = new Blob([fileText()], { type: 'text/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'config.js';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    flash('config.js downloaded — move it into this site folder, replacing the old one.');
+  };
+
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(fileText()); flash('Copied. Paste it over config.js'); }
+    catch (_) { flash('Copy blocked by the browser — use Download instead.'); }
+  };
+
+  return (
+    <>
+      <div className="bar">
+        <h1>✎ {c.brand.name} — Content Editor</h1>
+        <span className="sp" />
+        <a className="ghost" href="index.html" target="_blank" rel="noopener">Preview site ↗</a>
+        <button className="ghost" onClick={copy}>Copy</button>
+        <button className="save" onClick={download}>Download config.js</button>
+      </div>
+
+      <div className="shell">
+        <div className="hint">
+          <b>How this works —</b> change anything below, then:
+          <ol>
+            <li>Click <b>Download config.js</b>.</li>
+            <li>Move the downloaded file into this website's folder, replacing the existing <b>config.js</b>.</li>
+            <li>Refresh <b>index.html</b>. Done.</li>
+          </ol>
+          Nothing saves automatically — the page you are editing is just a form over the config file.
+        </div>
+
+        <details className="card" open>
+          <summary>Brand &amp; Contact</summary>
+          <div className="pad">
+            <div className="row">
+              <Field label="Name" value={c.brand.name} onChange={v => patch('brand', { name: v })} />
+              <Field label="Logo subtitle" value={c.brand.logoSub} onChange={v => patch('brand', { logoSub: v })} />
+              <Field label="Category" value={c.brand.type} onChange={v => patch('brand', { type: v })} />
+              <Field label="City" value={c.brand.city} onChange={v => patch('brand', { city: v })} />
+            </div>
+            <div className="row">
+              <Field label="Phone" value={c.brand.phone} onChange={v => patch('brand', { phone: v })} />
+              <Field label="WhatsApp number" value={c.brand.whatsapp} onChange={v => patch('brand', { whatsapp: v })} />
+              <Field label="Email" value={c.brand.email} onChange={v => patch('brand', { email: v })} />
+            </div>
+            <div className="row">
+              <Field label="Address" value={c.brand.address} onChange={v => patch('brand', { address: v })} />
+            </div>
+            <Field label="Short description" area={3} value={c.brand.description}
+              onChange={v => patch('brand', { description: v })} />
+          </div>
+        </details>
+
+        <details className="card">
+          <summary>Colours &amp; Theme</summary>
+          <div className="pad">
+            <div className="row">
+              {['primary', 'secondary', 'accent', 'bg', 'surface', 'text'].map(k => (
+                <Field key={k} label={k} type="color" value={c.theme[k]}
+                  onChange={v => patch('theme', { [k]: v })} />
+              ))}
+            </div>
+            <div className="swatches">
+              {['primary', 'secondary', 'accent', 'bg', 'surface', 'text'].map(k => (
+                <div key={k} className="sw" style={{ background: c.theme[k] }} title={k + ' ' + c.theme[k]} />
+              ))}
+            </div>
+            <p style={{ fontSize: '.78rem', color: 'var(--m)', marginTop: 10 }}>
+              <b>primary</b> = nav, footer, dark panels &nbsp;·&nbsp; <b>secondary</b> = buttons and highlights
+              &nbsp;·&nbsp; <b>bg</b> = page background &nbsp;·&nbsp; <b>surface</b> = cards
+            </p>
+          </div>
+        </details>
+
+        <List title="Hero Slides" items={c.hero.slides} nameKey="title"
+          onChange={v => patch('hero', { slides: v })}
+          blank={{ image: '', title: 'New headline', subtitle: 'Supporting line of copy.' }}
+          render={(it, up) => (
+            <>
+              <ImageField label="Background image" value={it.image} onChange={v => up({ image: v })} />
+              <div className="row" style={{ marginTop: 14 }}>
+                <Field label="Headline" value={it.title} onChange={v => up({ title: v })} />
+              </div>
+              <Field label="Subtitle" area={2} value={it.subtitle} onChange={v => up({ subtitle: v })} />
+            </>
+          )} />
+
+        <List title={c.labels.roomsTitle} items={c.rooms} nameKey="name"
+          onChange={v => put('rooms', v)}
+          blank={{ id: 'new-' + Date.now(), name: 'New option', price: 5000, desc: '', image: '',
+                   gallery: [], amenities: ['WiFi'], size: '30 m²', capacity: 2, beds: '1 Queen' }}
+          render={(it, up) => (
+            <>
+              <ImageField label="Main photo" value={it.image} onChange={v => up({ image: v })} />
+              <div className="row" style={{ marginTop: 14 }}>
+                <Field label="Name" value={it.name} onChange={v => up({ name: v })} />
+                <Field label="Price (number only)" type="number" value={it.price}
+                  onChange={v => up({ price: Number(v) || 0 })} />
+                <Field label="Size" value={it.size} onChange={v => up({ size: v })} />
+              </div>
+              <div className="row">
+                <Field label="Max guests" type="number" value={it.capacity}
+                  onChange={v => up({ capacity: Number(v) || 1 })} />
+                <Field label="Beds" value={it.beds} onChange={v => up({ beds: v })} />
+                <Field label="Amenities (comma separated)" value={(it.amenities || []).join(', ')}
+                  onChange={v => up({ amenities: v.split(',').map(s => s.trim()).filter(Boolean) })} />
+              </div>
+              <Field label="Description" area={2} value={it.desc} onChange={v => up({ desc: v })} />
+              <Field label="Extra gallery photos (comma separated links)" value={(it.gallery || []).join(', ')}
+                onChange={v => up({ gallery: v.split(',').map(s => s.trim()).filter(Boolean) })} />
+            </>
+          )} />
+
+        <List title="Features / Amenities" items={c.features} nameKey="title"
+          onChange={v => put('features', v)}
+          blank={{ icon: '✦', title: 'New feature', desc: '' }}
+          render={(it, up) => (
+            <div className="row">
+              <Field label="Icon" value={it.icon} onChange={v => up({ icon: v })} />
+              <Field label="Title" value={it.title} onChange={v => up({ title: v })} />
+              <Field label="Description" value={it.desc} onChange={v => up({ desc: v })} />
+            </div>
+          )} />
+
+        <List title="Gallery" items={c.gallery} nameKey="caption"
+          onChange={v => put('gallery', v)}
+          blank={{ image: '', caption: 'New photo' }}
+          render={(it, up) => (
+            <>
+              <ImageField label="Photo" value={it.image} onChange={v => up({ image: v })} />
+              <div className="row" style={{ marginTop: 14 }}>
+                <Field label="Caption" value={it.caption} onChange={v => up({ caption: v })} />
+              </div>
+            </>
+          )} />
+
+        <details className="card">
+          <summary>About Section</summary>
+          <div className="pad">
+            <Field label="Heading" value={c.about.title} onChange={v => patch('about', { title: v })} />
+            <div style={{ height: 14 }} />
+            <Field label="Paragraphs (one per line)" area={5} value={c.about.paragraphs.join('\n')}
+              onChange={v => patch('about', { paragraphs: v.split('\n').filter(s => s.trim()) })} />
+            <div style={{ height: 14 }} />
+            <Field label="Bullet points (one per line)" area={4} value={c.about.points.join('\n')}
+              onChange={v => patch('about', { points: v.split('\n').filter(s => s.trim()) })} />
+            <div style={{ height: 14 }} />
+            <ImageField label="About photo 1" value={c.about.images[0]}
+              onChange={v => patch('about', { images: [v, c.about.images[1]] })} />
+            <div style={{ height: 14 }} />
+            <ImageField label="About photo 2" value={c.about.images[1]}
+              onChange={v => patch('about', { images: [c.about.images[0], v] })} />
+          </div>
+        </details>
+
+        <List title="Statistics" items={c.stats} nameKey="label"
+          onChange={v => put('stats', v)}
+          blank={{ number: '100+', label: 'New stat' }}
+          render={(it, up) => (
+            <div className="row">
+              <Field label="Number (e.g. 500+ or 4.9)" value={it.number} onChange={v => up({ number: v })} />
+              <Field label="Label" value={it.label} onChange={v => up({ label: v })} />
+            </div>
+          )} />
+
+        <List title="Reviews" items={c.testimonials} nameKey="name"
+          onChange={v => put('testimonials', v)}
+          blank={{ name: 'New guest', title: '', text: '', rating: 5 }}
+          render={(it, up) => (
+            <>
+              <div className="row">
+                <Field label="Name" value={it.name} onChange={v => up({ name: v })} />
+                <Field label="Title / role" value={it.title} onChange={v => up({ title: v })} />
+                <Field label="Rating (1-5)" type="number" value={it.rating}
+                  onChange={v => up({ rating: Math.min(5, Math.max(1, Number(v) || 5)) })} />
+              </div>
+              <Field label="Review text" area={3} value={it.text} onChange={v => up({ text: v })} />
+            </>
+          )} />
+
+        <List title="FAQs" items={c.faqs} nameKey="q"
+          onChange={v => put('faqs', v)}
+          blank={{ q: 'New question?', a: '' }}
+          render={(it, up) => (
+            <>
+              <Field label="Question" value={it.q} onChange={v => up({ q: v })} />
+              <div style={{ height: 12 }} />
+              <Field label="Answer" area={3} value={it.a} onChange={v => up({ a: v })} />
+            </>
+          )} />
+
+        <details className="card">
+          <summary>Booking &amp; Pricing Rules</summary>
+          <div className="pad">
+            <div className="row">
+              <Field label="Currency symbol" value={c.booking.currency}
+                onChange={v => patch('booking', { currency: v })} />
+              <Field label="Tax rate (0.18 = 18%)" type="number" value={c.booking.taxRate}
+                onChange={v => patch('booking', { taxRate: Number(v) || 0 })} />
+              <Field label="Service fee" type="number" value={c.booking.serviceFee}
+                onChange={v => patch('booking', { serviceFee: Number(v) || 0 })} />
+            </div>
+            <div className="row">
+              <Field label="Minimum nights" type="number" value={c.booking.minNights}
+                onChange={v => patch('booking', { minNights: Number(v) || 1 })} />
+              <Field label="Booking ref prefix" value={c.booking.refPrefix}
+                onChange={v => patch('booking', { refPrefix: v })} />
+              <Field label="Mid-price threshold (for filters)" type="number" value={c.booking.midPrice}
+                onChange={v => patch('booking', { midPrice: Number(v) || 0 })} />
+            </div>
+          </div>
+        </details>
+
+        <details className="card">
+          <summary>Button &amp; Section Wording</summary>
+          <div className="pad">
+            <div className="row">
+              {['cta', 'ctaShort', 'browse', 'search', 'unit', 'unitPlural', 'per'].map(k => (
+                <Field key={k} label={k} value={c.labels[k]} onChange={v => patch('labels', { [k]: v })} />
+              ))}
+            </div>
+            <div className="row">
+              {['roomsTitle', 'featuresTitle', 'galleryTitle', 'reviewsTitle', 'bookTitle', 'faqTitle', 'contactTitle'].map(k => (
+                <Field key={k} label={k} value={c.labels[k]} onChange={v => patch('labels', { [k]: v })} />
+              ))}
+            </div>
+          </div>
+        </details>
+
+        <details className="card">
+          <summary>Social Links</summary>
+          <div className="pad">
+            <div className="row">
+              {Object.keys(c.social).map(k => (
+                <Field key={k} label={k} value={c.social[k]}
+                  onChange={v => patch('social', { [k]: v })} />
+              ))}
+            </div>
+          </div>
+        </details>
+      </div>
+
+      {msg && <div className="toast">{msg}</div>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
